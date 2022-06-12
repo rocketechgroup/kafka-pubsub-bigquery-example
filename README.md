@@ -60,3 +60,6 @@ python-kafka-example directory, then add the following line into the `conf {...}
 ```
 
 This should resolve the error and allow for successful connection to the server.
+
+## Credit
+Modified from https://github.com/CloudKarafka/python-kafka-example
