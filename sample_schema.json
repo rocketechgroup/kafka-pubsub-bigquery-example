@@ -42,5 +42,32 @@
         "mode": "NULLABLE"
       }
     ]
+  },
+  {
+    "description": "metadata columns",
+    "name": "metadata",
+    "type": "RECORD",
+    "fields": [
+      {
+        "name": "kafka_topic",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "kafka_partition",
+        "type": "INT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "kafka_offset",
+        "type": "INT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "kafka_consumer_timestamp",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE"
+      }
+    ]
   }
 ]

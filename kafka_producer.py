@@ -32,7 +32,7 @@ if __name__ == '__main__':
                              (msg.topic(), msg.partition()))
 
 
-    for _ in range(50):
+    for _ in range(1):
         with open("sample_message.json") as fp:
             msg_dict = json.loads(fp.read())
 
