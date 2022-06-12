@@ -1,0 +1,15 @@
+{
+  "transaction_time": "2020-07-20 15:14:54",
+  "first_name": "John",
+  "last_name": "Smith",
+  "products": [
+    {
+      "product_name": "Pixel 4",
+      "product_price": 799.5
+    },
+    {
+      "product_name": "Pixel Buds 2",
+      "product_price": 179
+    }
+  ]
+}

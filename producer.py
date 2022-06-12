@@ -1,5 +1,8 @@
 import sys
 import os
+import json
+import datetime
+import time
 
 from confluent_kafka import Producer
 
@@ -13,12 +16,13 @@ if __name__ == '__main__':
         'session.timeout.ms': 6000,
         'default.topic.config': {'auto.offset.reset': 'smallest'},
         'security.protocol': 'SASL_SSL',
-	'sasl.mechanisms': 'SCRAM-SHA-256',
+        'sasl.mechanisms': 'SCRAM-SHA-256',
         'sasl.username': os.environ['CLOUDKARAFKA_USERNAME'],
         'sasl.password': os.environ['CLOUDKARAFKA_PASSWORD']
     }
 
     p = Producer(**conf)
+
 
     def delivery_callback(err, msg):
         if err:
@@ -27,13 +31,22 @@ if __name__ == '__main__':
             sys.stderr.write('%% Message delivered to %s [%d]\n' %
                              (msg.topic(), msg.partition()))
 
-    for line in sys.stdin:
-        try:
-            p.produce(topic, line.rstrip(), callback=delivery_callback)
-        except BufferError as e:
-            sys.stderr.write('%% Local producer queue is full (%d messages awaiting delivery): try again\n' %
-                             len(p))
-        p.poll(0)
 
-    sys.stderr.write('%% Waiting for %d deliveries\n' % len(p))
-    p.flush()
+    for _ in range(50):
+        with open("sample_message.json") as fp:
+            msg_dict = json.loads(fp.read())
+
+            for _ in range(2):
+                msg_dict['transaction_time'] = datetime.datetime.now().isoformat()
+                msg = json.dumps(msg_dict)
+
+                try:
+                    p.produce(topic, msg, callback=delivery_callback)
+                except BufferError as e:
+                    sys.stderr.write('%% Local producer queue is full (%d messages awaiting delivery): try again\n' %
+                                     len(p))
+            p.poll(0)
+
+        sys.stderr.write('%% Waiting for %d deliveries\n' % len(p))
+        p.flush()
+        time.sleep(1)

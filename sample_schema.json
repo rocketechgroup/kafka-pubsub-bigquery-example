@@ -1,0 +1,46 @@
+[
+  {
+    "description": "Transaction time",
+    "name": "transaction_time",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED"
+  },
+  {
+    "description": "First name",
+    "name": "first_name",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "description": "Last name",
+    "name": "last_name",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "description": "City",
+    "name": "city",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "description": "List of products",
+    "name": "products",
+    "type": "RECORD",
+    "mode": "REPEATED",
+    "fields": [
+      {
+        "description": "Product name",
+        "name": "product_name",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "description": "Product price",
+        "name": "product_price",
+        "type": "FLOAT64",
+        "mode": "NULLABLE"
+      }
+    ]
+  }
+]

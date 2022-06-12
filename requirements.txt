@@ -1,0 +1,2 @@
+confluent_kafka==1.8.2
+google-cloud-pubsub==2.12.0
