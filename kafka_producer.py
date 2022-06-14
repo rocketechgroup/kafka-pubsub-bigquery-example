@@ -32,11 +32,11 @@ if __name__ == '__main__':
                              (msg.topic(), msg.partition()))
 
 
-    for _ in range(1):
+    for _ in range(10):
         with open("sample_message.json") as fp:
             msg_dict = json.loads(fp.read())
 
-            for _ in range(2):
+            for _ in range(5):
                 msg_dict['transaction_time'] = datetime.datetime.now().isoformat()
                 msg = json.dumps(msg_dict)
 

@@ -49,6 +49,7 @@ conf = {
     'bootstrap.servers': os.environ['CLOUDKARAFKA_BROKERS'],
     'group.id': "%s-consumer" % os.environ['CLOUDKARAFKA_USERNAME'],
     'session.timeout.ms': 6000,
+    # enable.auto.offset.store: false means turn off auto update on the local offset store but manage it manually
     'default.topic.config': {'auto.offset.reset': 'earliest', 'enable.auto.offset.store': False},
     'security.protocol': 'SASL_SSL',
     'sasl.mechanisms': 'SCRAM-SHA-256',
@@ -69,8 +70,38 @@ while True:
     elapsed_time = current_time - start_time
 
     msg = c.poll(timeout=1.0)
-    if msg is None:
+    """ 
+    Manage offset on each partition and topic independently by making sure only the latest + 1
+    offset is committed when all requests are sent to Pub/Sub successfully. 
+    
+    If any of the sends have failed, the pubsub client will automatically retry for a period of time, 
+    if they are still failed a exception will be raised and the whole process terminates.
+    """
+    if msg is None and publish_futures:
+        logging.info("Iteration since the last one: " + str(int(elapsed_time)) + " seconds")
+        done, not_done = futures.wait(fs=publish_futures, return_when=futures.FIRST_EXCEPTION)
+
+        for f in done:
+            if f.exception():
+                raise RuntimeError("terminating consumer due to exceptions...")
+
+        topic_partitions = []
+        for topic, partitions in publish_futures_offset_tracker.items():
+            for partition, offsets in partitions.items():
+                offset_to_commit = max(offsets) + 1
+                logging.info(f"Committing offset for topic partition:  {topic}-{partition}--{offset_to_commit}")
+                topic_partitions.append(TopicPartition(topic, partition, offset_to_commit))
+
+        c.store_offsets(offsets=topic_partitions)
+
+        # all futures are done, reinitialise..
+        start_time = time.time()
+        publish_futures = []
+        publish_futures_offset_tracker = {}
         continue
+    elif msg is None:
+        continue
+
     if msg.error():
         # Error or event
         if msg.error().code() == KafkaError._PARTITION_EOF:
@@ -109,28 +140,6 @@ while True:
             publish_futures_offset_tracker[msg.topic()][msg.partition()].append(msg.offset())
 
         logging.info(f"Offsite tracker: {json.dumps(publish_futures_offset_tracker)}")
-
-    if elapsed_time > seconds:
-        logging.info("Iteration since the last one: " + str(int(elapsed_time)) + " seconds")
-        done, not_done = futures.wait(fs=publish_futures, return_when=futures.FIRST_EXCEPTION)
-
-        for f in done:
-            if f.exception():
-                raise RuntimeError("terminating consumer due to exceptions...")
-
-        topic_partitions = []
-        for topic, partitions in publish_futures_offset_tracker.items():
-            for partition, offsets in partitions.items():
-                offset_to_commit = max(offsets) + 1
-                logging.info(f"Committing offset for topic partition:  {topic}-{partition}--{offset_to_commit}")
-                topic_partitions.append(TopicPartition(topic, partition, offset_to_commit))
-
-        c.store_offsets(offsets=topic_partitions)
-
-        # all futures are done, reinitialise..
-        start_time = time.time()
-        publish_futures = []
-        publish_futures_offset_tracker = {}
 
 # Close down consumer to commit final offsets.
 c.close()
