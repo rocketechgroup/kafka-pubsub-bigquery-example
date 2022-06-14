@@ -32,11 +32,11 @@ if __name__ == '__main__':
                              (msg.topic(), msg.partition()))
 
 
-    for _ in range(10):
+    for _ in range(100):
         with open("sample_message.json") as fp:
             msg_dict = json.loads(fp.read())
 
-            for _ in range(5):
+            for _ in range(100):
                 msg_dict['transaction_time'] = datetime.datetime.now().isoformat()
                 msg = json.dumps(msg_dict)
 
@@ -49,4 +49,4 @@ if __name__ == '__main__':
 
         sys.stderr.write('%% Waiting for %d deliveries\n' % len(p))
         p.flush()
-        time.sleep(1)
+        time.sleep(0.2)

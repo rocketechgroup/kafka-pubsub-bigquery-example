@@ -60,6 +60,7 @@ conf = {
 c = Consumer(**conf)
 c.subscribe(topics)
 
+BATCH_SIZE=500
 publish_futures = []
 publish_futures_offset_tracker = {}
 start_time = time.time()
@@ -77,7 +78,7 @@ while True:
     If any of the sends have failed, the pubsub client will automatically retry for a period of time, 
     if they are still failed a exception will be raised and the whole process terminates.
     """
-    if msg is None and publish_futures:
+    if msg is None and publish_futures or len(publish_futures) > 0 and len(publish_futures) % BATCH_SIZE == 0:
         logging.info("Iteration since the last one: " + str(int(elapsed_time)) + " seconds")
         done, not_done = futures.wait(fs=publish_futures, return_when=futures.FIRST_EXCEPTION)
 
